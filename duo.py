@@ -1,3 +1,9 @@
+"""
+Automata to farm XP on Duolingo
+
+This is unlikely to work any more. Keeping here for the GUI code that might be useful later.
+"""
+
 import array
 import pyautogui
 import time
@@ -224,7 +230,8 @@ class Screen():
         self.data = array.array('B', [0] * LESSON_WIDTH * LESSON_HEIGHT * 3)
         bitmap = wx.Bitmap(LESSON_WIDTH, LESSON_HEIGHT)
         mem = wx.MemoryDC(bitmap)
-        mem.Blit(0, 0, LESSON_WIDTH, LESSON_HEIGHT, screen, lesson[0], lesson[1])
+        mem.Blit(0, 0, LESSON_WIDTH, LESSON_HEIGHT,
+                 screen, lesson[0], lesson[1])
         del mem
         bitmap.CopyToBuffer(self.data)
 
@@ -238,7 +245,7 @@ class Action():
     PROCEED = 2
     RESTART = 3
 
-    def __init__(self, lesson, action, params = None):
+    def __init__(self, lesson, action, params=None):
         self.lesson = lesson
         self.action = action
         self.params = params
@@ -254,14 +261,16 @@ class Action():
 
     def run(self):
         if self.action == Action.CLICK:
-            pyautogui.moveTo(self.params[0] + self.lesson[0], self.params[1] + self.lesson[1], duration=0)
+            pyautogui.moveTo(
+                self.params[0] + self.lesson[0], self.params[1] + self.lesson[1], duration=0)
             pyautogui.click()
         elif self.action == Action.PROCEED:
             pyautogui.moveTo(self.lesson[0]+2*LESSON_WIDTH//6, self.lesson[1] +
-                            LESSON_HEIGHT-LESSON_BUTTON_INSET, duration=0)
+                             LESSON_HEIGHT-LESSON_BUTTON_INSET, duration=0)
             pyautogui.click()
         elif self.action == Action.RESTART:
-            pyautogui.moveTo(self.lesson[0]+10, self.lesson[1] + LESSON_HEIGHT//2, duration=0)
+            pyautogui.moveTo(
+                self.lesson[0]+10, self.lesson[1] + LESSON_HEIGHT//2, duration=0)
             pyautogui.click()
             pyautogui.hotkey('ctrl', 'f')
             pyautogui.write('In the Museum')
@@ -298,7 +307,8 @@ class Blob():
                     first_r = x
                 total += red
                 if red > 100:
-                    total_lin += ((x-first_r)*(self.first[0]+self.last[0])/2)/self.count
+                    total_lin += ((x-first_r) *
+                                  (self.first[0]+self.last[0])/2)/self.count
         # if texts == PAIRS:
             # print(self.count, total, total_lin)
             # self.show()
@@ -477,10 +487,10 @@ def act(skip, lesson, screen):
                              for x in TRANSLATIONS if x in pairs and TRANSLATIONS[x] in pairs]
                     actions = []
                     for p in pwise:
-                      actions += [p[0].click(), p[1].click()]
+                        actions += [p[0].click(), p[1].click()]
                     if len(pwise) != 5:
                         for f in found:
-                          actions.append(f.click())
+                            actions.append(f.click())
                     actions.append(Action.proceed(lesson))
                     return actions
     if skip > 1:
@@ -532,33 +542,34 @@ def should_quit():
 
 
 def lesson_func(index):
-  action_taken = False
-  # while not should_quit() or not action_taken:
-  while True:
-      try:
-        if DEBUG:
-            print(index, 'waiting')
-        lesson = task_queue.get()
-        if DEBUG:
-            print(index, 'running', lesson)
-        actions = act(FIRST_SKIP, lesson, Screen(lesson))
-        if DEBUG:
-            print(index, 'done')
-        action_queue.put((lesson, actions))
-        if DEBUG:
-            print(index, 'sent')
-        task_queue.task_done()
-        action_taken = True
-      except queue.Empty:
-        pass
-  if DEBUG:
-      print(index, 'chilling')
+    action_taken = False
+    # while not should_quit() or not action_taken:
+    while True:
+        try:
+            if DEBUG:
+                print(index, 'waiting')
+            lesson = task_queue.get()
+            if DEBUG:
+                print(index, 'running', lesson)
+            actions = act(FIRST_SKIP, lesson, Screen(lesson))
+            if DEBUG:
+                print(index, 'done')
+            action_queue.put((lesson, actions))
+            if DEBUG:
+                print(index, 'sent')
+            task_queue.task_done()
+            action_taken = True
+        except queue.Empty:
+            pass
+    if DEBUG:
+        print(index, 'chilling')
+
 
 pool.map_async(lesson_func, range(POOL_SIZE))
 
 action_taken = False
 for lesson in LESSONS:
-  task_queue.put(lesson)
+    task_queue.put(lesson)
 while not should_quit() or not action_taken:
     # for lesson in LESSONS:
     #     # mxb, myb = pyautogui.position()
@@ -575,7 +586,8 @@ while not should_quit() or not action_taken:
     #         break
     # time.sleep(1)
 
-    print('\r    Queued prompts: ', task_queue.qsize(), '      Queued actions: ', action_queue.qsize(), '              ', end='')
+    print('\r    Queued prompts: ', task_queue.qsize(),
+          '      Queued actions: ', action_queue.qsize(), '              ', end='')
     try:
         task = action_queue.get_nowait()
         (lesson, actions) = task
