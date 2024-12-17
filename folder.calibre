@@ -1,0 +1,11 @@
+program:
+  language = language_strings(list_item(field('languages'), 0, ","), "en");
+  tag = list_item(field('tags'), 0, ",");
+  tag = if tag then capitalize(tag) else "" fi;
+  dir = if language == "English" then tag else language fi;
+  authors = field('author_sort');
+  authors = if list_count(authors, "&") == 1 then authors else "" fi;
+  authors = re(authors, ",.*", "");
+  authors = if authors then authors & " - " else "" fi;
+  title = re(field('title'), "(;|: |, The).*", "");
+  file = dir & "/" & authors & title;
